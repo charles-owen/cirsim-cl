@@ -1,0 +1,19 @@
+{
+  "name": "cirsim-cl",
+  "version": "0.0.1",
+  "description": "CourseLib Website Cirsim components",
+  "main": "index.js",
+  "keywords": [
+    "Education",
+    "Course Web Sites",
+    "Cirsim",
+    "Circuit Simulation"
+  ],
+  "author": "Charles B. Owen",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "course-cl": ">=0.0.1",
+    "cirsim": ">2.0.8"
+  }
+}
