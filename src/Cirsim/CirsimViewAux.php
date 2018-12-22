@@ -149,7 +149,7 @@ class CirsimViewAux extends ViewAux {
 	 *
 	 * Demo mode is an inline placement with simulation, but no editing
 	 * capabilities. It's used to demo circuit components on a page.
-	 * @param $json JSON file to initially load
+	 * @param string $json JSON file to initially load
 	 * @param null $class Additional classes to add to the DIV
 	 * @return string HTML
 	 */
@@ -163,9 +163,14 @@ class CirsimViewAux extends ViewAux {
 		$html = '';
 
 		$class = $class !== null ? ' ' . $class : '';
-		$html .= '<div id="' . $this->id . '" class="cirsim-inline' . $class . '"></div>';
-
-		$html .= $this->present_script($site, $user, true, $json);
+		$data = [
+			'display'=>'inline',
+			'load'=>$json
+		];
+		$payload = htmlspecialchars(json_encode($data), ENT_NOQUOTES);
+		$html .= '<div class="cl-cirsim' . $class . '">' . $payload . '</div>';
+//
+//		$html .= $this->present_script($site, $user, true, $json);
 
 		return $html;
 	}

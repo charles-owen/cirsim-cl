@@ -1,9 +1,9 @@
-
+import './cirsim.scss';
 import Cirsim from 'cirsim';
 
 export {Cirsim};
 export default Cirsim;
 
-//import {TrelloFactory} from './js/TrelloFactory';
+import {CirsimFactory} from './js/CirsimFactory';
 
-//TrelloFactory.create(Site.Site);
+CirsimFactory.create(Site.Site);
