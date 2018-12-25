@@ -11,6 +11,7 @@ use CL\Site\ViewAux;
 use CL\Site\View;
 use CL\Users\User;
 use CL\Course\Member;
+use CL\FileSystem\FileSystem;
 
 /**
  * View aux class for Cirsim
@@ -36,14 +37,33 @@ class CirsimViewAux extends ViewAux {
 	public function reset() {
 		$this->only = null;
 		$this->tests = array();
-		$this->assignment = null;
-		$this->tag = null;
+		$this->appTag = null;
 		$this->name = null;
 		$this->js = "";
 		$this->tabs = array();
 		$this->imports = array();
 	}
 
+
+	/**
+	 * Property get magic method
+	 *
+	 * <b>Properties</b>
+	 * Property | Type | Description
+	 * -------- | ---- | -----------
+	 *
+	 * @param string $property Property name
+	 * @return mixed
+	 */
+	public function __get($property) {
+		switch($property) {
+			case 'tests':
+				return $this->tests;
+
+			default:
+				return parent::__get($property);
+		}
+	}
 
 	/**
 	 * Property set magic method
@@ -69,6 +89,10 @@ class CirsimViewAux extends ViewAux {
 				$this->tabs = $value;
 				break;
 
+			case 'tests':
+				$this->tests = $value;
+				break;
+
 			default:
 				parent::__set($property, $value);
 				break;
@@ -79,13 +103,15 @@ class CirsimViewAux extends ViewAux {
 	/**
 	 * Calling this function puts Cirsim into single file mode.
 	 * Only one file can be saved in this mode.
-	 * @param $assignment
-	 * @param $tag
-	 * @param $name
+	 *
+	 * The application tag is an assignment tag if the submission is
+	 * limited to submission only during the assignment.
+	 *
+	 * @param string $appTag The application tag. Can be an assignment tag
+	 * @param $name $name The name to use
 	 */
-	public function single($assignment, $tag, $name) {
-		$this->assignment = $assignment;
-		$this->tag = $tag;
+	public function single($appTag, $name) {
+		$this->appTag = $appTag;
 		$this->name = $name;
 	}
 
@@ -113,12 +139,22 @@ class CirsimViewAux extends ViewAux {
 	 * @return string
 	 */
 	public function present($full = false, $class=null) {
-		$view = $this->view;
-		$user = $view->get_user();
-		$course = $view->get_course();
+		$html = '';
 
-		return $this->present_div($full, $class) .
-			$this->present_script($course, $user);
+		if(!$full) {
+			$html .= $this->view->exitBody();
+		}
+
+		$user = $this->view->user;
+		$site = $this->view->site;
+
+		$html .= $this->present_div($site, $user, $full, $class);
+
+		if(!$full) {
+			$html .= $this->view->reenterBody();
+		}
+
+		return $html;
 	}
 
 	/**
@@ -127,19 +163,67 @@ class CirsimViewAux extends ViewAux {
 	 * false for windowed (cirsim-window).
 	 * @return string
 	 */
-	public function present_div($full = false, $class=null) {
-		$this->new_id();
+	public function present_div(Site $site, User $user, $full = false, $class=null) {
+		$root = $site->root;
 
 		$html = '';
 
-		$class = $class !== null ? ' ' . $class : '';
-		if ($full) {
-			$html .= '<div id="' . $this->id . '" class="cirsim-full' . $class . '"></div>';
-		} else {
-			$html .= $this->view->exit_body() .
-				'<div id="' . $this->id . '" class="cirsim-window' . $class . '"></div>' .
-				$this->view->reenter_body();
+		$data = [
+			'display'=>$full ? 'full' : 'window'
+		];
+
+		// Features only available to staff
+		if(!$user->staff) {
+			$data['export'] = 'none';
 		}
+
+		if($this->only !== null) {
+			$data['components'] = $this->only;
+		}
+
+		$data['api'] = [];
+
+		if($this->name !== null) {
+			// Single-save mode
+			$data['api']['save'] = [
+				'url'=> $root . '/cl/api/filesystem/save',
+				'contentType'=>'application/json',
+				'name'=>$this->name
+			];
+
+
+			$fileSystem = new FileSystem($site->db);
+			$file = $fileSystem->readText($user->id, $this->appTag, $this->name);
+			if($file !== null) {
+				$data['load'] = $file['data'];
+			}
+		}
+
+		if($this->appTag !== null) {
+			$data['api']['extra'] = [
+				'appTag'=>$this->appTag
+			];
+		}
+
+		//
+		// Tests
+		//
+		$tests = [];
+		foreach($this->tests as $test) {
+			if($test['staff'] && !$user->staff) {
+				continue;
+			}
+
+			$tests[] = base64_encode(json_encode($test));
+		}
+
+		if(count($tests) > 0) {
+			$data['tests'] = $tests;
+		}
+
+		$payload = htmlspecialchars(json_encode($data), ENT_NOQUOTES);
+		$html .= '<div class="cl-cirsim' . $class . '">' . $payload . '</div>';
+
 
 		return $html;
 	}
@@ -154,37 +238,29 @@ class CirsimViewAux extends ViewAux {
 	 * @return string HTML
 	 */
 	public function present_demo($json, $class=null) {
-		$this->new_id();
-
-		$view = $this->view;
-		$user = $view->user;
-		$site = $view->site;
-
-		$html = '';
-
 		$class = $class !== null ? ' ' . $class : '';
 		$data = [
 			'display'=>'inline',
 			'load'=>$json
 		];
 		$payload = htmlspecialchars(json_encode($data), ENT_NOQUOTES);
-		$html .= '<div class="cl-cirsim' . $class . '">' . $payload . '</div>';
-//
+		$html = '<div class="cl-cirsim' . $class . '">' . $payload . '</div>';
+
 //		$html .= $this->present_script($site, $user, true, $json);
 
 		return $html;
 	}
 
-	public function present_div_minimal($class=null) {
-		$this->new_id();
-
-		$html = '';
-
-		$class = $class !== null ? ' ' . $class : '';
-		$html .= '<div id="' . $this->id . '" class="cirsim-window' . $class . '"></div>';
-
-		return $html;
-	}
+//	public function present_div_minimal($class=null) {
+//		$this->new_id();
+//
+//		$html = '';
+//
+//		$class = $class !== null ? ' ' . $class : '';
+//		$html .= '<div id="' . $this->id . '" class="cirsim-window' . $class . '"></div>';
+//
+//		return $html;
+//	}
 
 	public function present_script(Site $site, User $user, $demo=false, $json=null) {
 		$html = '<script>$(document).ready(function() ';
@@ -229,7 +305,7 @@ JS;
 		 * Tests
 		 */
 		foreach($this->tests as $test) {
-			if($test['staff'] && $user->is_staff()) {
+			if($test['staff'] && !$user->staff) {
 				continue;
 			}
 
@@ -281,14 +357,14 @@ JS;
 
 	/**
 	 * Add a test
-	 * @param $name Test name
-	 * @param $input Array of input pin names
-	 * @param $output Array of output pin names
-	 * @param $test Either: Array of tests, each an array of values
+	 * @param string $name Test name
+	 * @param array $input Array of input pin names
+	 * @param array $output Array of output pin names
+	 * @param array|callable $test Either: Array of tests, each an array of values
 	 *  -or- function to compute result
-	 * @param $staff True if only staff members see this test
+	 * @param boolean $staff True if only staff members see this test
 	 */
-	public function add_test($name, $input, $output, $test, $staff=false) {
+	public function add_test($name, array $input, $output, $test, $staff=false) {
 		if(is_callable($test)) {
 			$test_func = $test;
 			$test = array();
@@ -369,25 +445,13 @@ JS;
 	/**
 	 * Set a user to view circuits for. This overrides the default
 	 * behavior of the current user. This is mainly for grading purposes.
-	 * @param \User $user User to view
+	 * @param User $user User to view
 	 */
-	public function set_other_user(\User $user) {
+	public function set_other_user(User $user) {
 		$this->other_user = $user;
 	}
 
-	private function new_id() {
-		self::$unique++;
-		$this->id = "cirsim-" . self::$unique;
-	}
-
-	public function set_id($id) {
-		$this->id = $id;
-	}
-
-	private $id = null;
-
-	private $assignment = null;
-	private $tag = null;
+	private $appTag = null;
 	private $name = null;
 	private $only = null;		///< Optional list of only certain components allowed
 	private $tests = array();

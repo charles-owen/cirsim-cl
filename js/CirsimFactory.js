@@ -5,7 +5,7 @@ export const CirsimFactory = function() {
 
 CirsimFactory.create = function(site) {
 
-	site.start( () => {
+	function install() {
 		const elements = document.querySelectorAll('div.cl-cirsim');
 		for(let i=0; i<elements.length; i++) {
 			let element = elements[i];
@@ -14,6 +14,16 @@ CirsimFactory.create = function(site) {
 			const cirsim = new Cirsim(element, json);
 			cirsim.startNow();
 			element.style.display = 'block';
+		}
+	}
+
+	site.start( () => {
+		install();
+	});
+
+	site.messageListener((msg, data) => {
+		if(msg === 'cl-quiz-after-installed') {
+			install();
 		}
 	});
 }
