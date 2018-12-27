@@ -1,4 +1,4 @@
-import './cirsim.scss';
+import './_cirsim.scss';
 import Cirsim from 'cirsim';
 
 export {Cirsim};

@@ -22,8 +22,15 @@ CirsimFactory.create = function(site) {
 	});
 
 	site.messageListener((msg, data) => {
-		if(msg === 'cl-quiz-after-installed') {
-			install();
+		switch(msg) {
+			case 'cl-quiz-after-installed':
+				install();
+				break;
+
+			case 'cl-grades-grader-installed':
+				install();
+				break;
+
 		}
 	});
 }

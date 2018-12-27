@@ -1,5 +1,6 @@
 <?php
-/** @file
+/**
+ * @file
  * Class that describes a question that is answered using Cirsim
  */
 
@@ -22,7 +23,7 @@ class QuizQuestionCirsim extends \CL\Quiz\QuizQuestion {
 		$this->mustProvideMessage = 'Must click Test before submitting quiz result';
 
 		// This is the value that must be returned on a test success for this question.
-		$this->success = mt_rand();
+		$this->success = mt_rand(1, mt_getrandmax());
 	}
 
 	/**
@@ -99,59 +100,6 @@ class QuizQuestionCirsim extends \CL\Quiz\QuizQuestion {
 HTML;
 
 		return $html;
-
-
-
-		/*
-		 * Either answer preview or answer submission form
-		 */
-		if($preview) {
-			$html .= "<hr />";
-
-			$html .= $this->cirsim->present_tests();
-
-			// Comment preview
-			if($this->comment !== null) {
-				$html .= "<p>Comment:</p>";
-				$html .= $this->comment;
-			}
-		} else {
-			$html .= <<<END
-<form id="question" action="" method="post"><p>
-<input type="hidden" name="answer" id="answer">
-<input type="hidden" name="circuit" id="circuit">
-<input name="Submit" type="submit" value="submit" /> <span id="message" class="smallred">&nbsp;</span>
-END;
-			
-			$html .= <<<END
-<br /></p></form><script>
-var present_post = function() {
-	$('#question').submit(function(event) {
-	    event.preventDefault();
-		var answer = $("#answer").val();
-		var circuit = $("#circuit").val();
-		if(answer == "") {
-			$('#message').text("Must click the Test option before submitting");
-		} else {
-			var data = {session: '$sessionName', cmd: 'submit', answer: answer, circuit: circuit};
-			$.ajax({
-				type: "POST",  
-				url: "$libroot/quiz/quiz-post.php",
-				data: data,
-				success: function(data) {
-					$("#quiz").html(data);
-					present_post();
-				}  
-			}); 
-		}
-		return false; // prevent default
-	});	
-}
-END;
-			$html .= "</script>";
-		}
-		
-		return $html;
 	}
 
 
@@ -183,11 +131,11 @@ END;
 	 */
     public function submit(Site $site, User $user, $post) {
 
-    	$answer = +$post['cl-cirsim-answer'];
+    	$answer = $post['cl-cirsim-answer'];
 		$circuit = $post['cl-cirsim-circuit'];
 
 	    $html = $this->text;
-		$good = $answer === $this->success;
+		$good = +$answer === $this->success;
 
 	    $this->correct = $good ? $this->points : 0;
         $this->studentanswer = $circuit;

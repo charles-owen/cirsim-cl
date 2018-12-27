@@ -10,6 +10,7 @@ namespace CL\Cirsim;
 use CL\Site\Site;
 use CL\Site\System\Server;
 use CL\Site\Router;
+use CL\Console\ConsoleView;
 
 /**
  * Plugin that adds server-side support for Cirsim to a course.
@@ -41,6 +42,8 @@ class CirsimPlugin extends \CL\Site\Plugin {
 				$resource = new CirsimApi();
 				return $resource->apiDispatch($site, $server, $params, $properties, $time);
 			});
+		} else if($object instanceof ConsoleView) {
+			$object->addJS('cirsim');
 		}
 	}
 

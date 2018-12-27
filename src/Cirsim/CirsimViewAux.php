@@ -17,12 +17,14 @@ use CL\FileSystem\FileSystem;
  * View aux class for Cirsim
  *
  * Adds Cirsim to an existing view.
+ *
+ * @cond
+ * @property boolean save
+ * @endcond
  */
 class CirsimViewAux extends ViewAux {
-	private static $unique = 0;
-
 	/**
-	 * Called when this auxilliary view is installed in a view
+	 * Called when this auxiliary view is installed in a view
 	 * @param View $view View we are installing into
 	 */
 	public function install(View $view) {
@@ -36,12 +38,13 @@ class CirsimViewAux extends ViewAux {
 	 */
 	public function reset() {
 		$this->only = null;
-		$this->tests = array();
+		$this->tests = [];
 		$this->appTag = null;
 		$this->name = null;
-		$this->js = "";
-		$this->tabs = array();
-		$this->imports = array();
+		$this->tabs = [];
+		$this->imports = [];
+		$this->save = false;
+		$this->options = [];
 	}
 
 
@@ -77,10 +80,6 @@ class CirsimViewAux extends ViewAux {
 	 */
 	public function __set($property, $value) {
 		switch($property) {
-			case "js":
-				$this->js = $value;
-				break;
-
 			case "tab":
 				$this->tabs[] = $value;
 				break;
@@ -91,6 +90,10 @@ class CirsimViewAux extends ViewAux {
 
 			case 'tests':
 				$this->tests = $value;
+				break;
+
+			case 'save':
+				$this->save = $value;
 				break;
 
 			default:
@@ -113,6 +116,7 @@ class CirsimViewAux extends ViewAux {
 	public function single($appTag, $name) {
 		$this->appTag = $appTag;
 		$this->name = $name;
+		$this->save = true;
 	}
 
 	/**
@@ -142,7 +146,8 @@ class CirsimViewAux extends ViewAux {
 		$html = '';
 
 		if(!$full) {
-			$html .= $this->view->exitBody();
+			$html .= '<div class="cl-cirsim-gap-before"></div>'
+				. $this->view->exitBody();
 		}
 
 		$user = $this->view->user;
@@ -151,7 +156,8 @@ class CirsimViewAux extends ViewAux {
 		$html .= $this->present_div($site, $user, $full, $class);
 
 		if(!$full) {
-			$html .= $this->view->reenterBody();
+			$html .= $this->view->reenterBody() .
+				'<div class="cl-cirsim-gap-after"></div>';
 		}
 
 		return $html;
@@ -172,6 +178,10 @@ class CirsimViewAux extends ViewAux {
 			'display'=>$full ? 'full' : 'window'
 		];
 
+		foreach($this->options as $option => $value) {
+			$data[$option] = $value;
+		}
+
 		// Features only available to staff
 		if(!$user->staff) {
 			$data['export'] = 'none';
@@ -184,14 +194,19 @@ class CirsimViewAux extends ViewAux {
 		$data['api'] = [];
 
 		if($this->name !== null) {
+			//
 			// Single-save mode
-			$data['api']['save'] = [
-				'url'=> $root . '/cl/api/filesystem/save',
-				'contentType'=>'application/json',
-				'name'=>$this->name
-			];
+			//
 
+			if($this->save) {
+				$data['api']['save'] = [
+					'url'=> $root . '/cl/api/filesystem/save',
+					'contentType'=>'application/json',
+					'name'=>$this->name
+				];
+			}
 
+			// Loading the single-save file
 			$fileSystem = new FileSystem($site->db);
 			$file = $fileSystem->readText($user->id, $this->appTag, $this->name);
 			if($file !== null) {
@@ -221,6 +236,10 @@ class CirsimViewAux extends ViewAux {
 			$data['tests'] = $tests;
 		}
 
+		if(strlen($class) > 0) {
+			$class = ' ' . $class;
+		}
+
 		$payload = htmlspecialchars(json_encode($data), ENT_NOQUOTES);
 		$html .= '<div class="cl-cirsim' . $class . '">' . $payload . '</div>';
 
@@ -246,9 +265,17 @@ class CirsimViewAux extends ViewAux {
 		$payload = htmlspecialchars(json_encode($data), ENT_NOQUOTES);
 		$html = '<div class="cl-cirsim' . $class . '">' . $payload . '</div>';
 
-//		$html .= $this->present_script($site, $user, true, $json);
-
 		return $html;
+	}
+
+
+	/**
+	 * Add other Cirsim config options.
+	 * @param string $option Option name
+	 * @param mixed $value Value to set
+	 */
+	public function option($option, $value) {
+		$this->options[$option] = $value;
 	}
 
 //	public function present_div_minimal($class=null) {
@@ -262,90 +289,90 @@ class CirsimViewAux extends ViewAux {
 //		return $html;
 //	}
 
-	public function present_script(Site $site, User $user, $demo=false, $json=null) {
-		$html = '<script>$(document).ready(function() ';
-		$html .= '{';
-
-		$root = $site->root . '/cirsim';
-
-		$id = $user->id;
-		$staff = $user->atLeast(Member::GRADER) ? "1" : "0";
-
-		if($this->name !== null) {
-			$html .= <<<JS
-var cirsim = new Cirsim.Main("$root", "#$this->id", $id, $staff);
-cirsim.single("$this->assignment", "$this->tag", "$this->name");
-
-JS;
-		} else {
-			$html .= <<<JS
-var cirsim = new Cirsim.Main("$root", "#$this->id", $id, $staff);
-
-JS;
-		}
-
-		/*
-		 * Optional list of only certain components allowed
-		 */
-		if($this->only !== null) {
-			$html .= "cirsim.set_only(";
-			$first = true;
-			foreach($this->only as $only) {
-				if($first) {
-					$first = false;
-				} else {
-					$html .= ',';
-				}
-				$html .= '"' . $only . '"';
-			}
-			$html .= ");";
-		}
-
-		/*
-		 * Tests
-		 */
-		foreach($this->tests as $test) {
-			if($test['staff'] && !$user->staff) {
-				continue;
-			}
-
-			$testjson = base64_encode(json_encode($test));
-			$html .= 'cirsim.add_test("' . $testjson . '");';
-		}
-
-		if($this->other_user !== null) {
-			$html .= 'cirsim.set_userid(' . $this->other_user->get_id() . ');';
-		}
-
-		if($demo) {
-			$html .= 'cirsim.options.demo = true;';
-		}
-
-		if($json !== null) {
-			$html .= "cirsim.options.load='" . $json . "';";
-		}
-
-		if(count($this->tabs) > 0) {
-			$tabs = '';
-			foreach($this->tabs as $tab) {
-				if(strlen($tabs) > 0) {
-					$tabs .= ",";
-				}
-
-				$tabs .= '"' . $tab . '"';
-			}
-
-			$html .= "cirsim.options.tabs=[$tabs];";
-		}
-
-		if(count($this->imports) > 0) {
-			$json = json_encode($this->imports);
-			$html .= "cirsim.options.imports=$json;";
-		}
-
-		$html .= $this->js . 'cirsim.run();});</script>';
-		return $html;
-	}
+//	public function present_script(Site $site, User $user, $demo=false, $json=null) {
+//		$html = '<script>$(document).ready(function() ';
+//		$html .= '{';
+//
+//		$root = $site->root . '/cirsim';
+//
+//		$id = $user->id;
+//		$staff = $user->atLeast(Member::GRADER) ? "1" : "0";
+//
+//		if($this->name !== null) {
+//			$html .= <<<JS
+//var cirsim = new Cirsim.Main("$root", "#$this->id", $id, $staff);
+//cirsim.single("$this->assignment", "$this->tag", "$this->name");
+//
+//JS;
+//		} else {
+//			$html .= <<<JS
+//var cirsim = new Cirsim.Main("$root", "#$this->id", $id, $staff);
+//
+//JS;
+//		}
+//
+//		/*
+//		 * Optional list of only certain components allowed
+//		 */
+//		if($this->only !== null) {
+//			$html .= "cirsim.set_only(";
+//			$first = true;
+//			foreach($this->only as $only) {
+//				if($first) {
+//					$first = false;
+//				} else {
+//					$html .= ',';
+//				}
+//				$html .= '"' . $only . '"';
+//			}
+//			$html .= ");";
+//		}
+//
+//		/*
+//		 * Tests
+//		 */
+//		foreach($this->tests as $test) {
+//			if($test['staff'] && !$user->staff) {
+//				continue;
+//			}
+//
+//			$testjson = base64_encode(json_encode($test));
+//			$html .= 'cirsim.add_test("' . $testjson . '");';
+//		}
+//
+//		if($this->other_user !== null) {
+//			$html .= 'cirsim.set_userid(' . $this->other_user->get_id() . ');';
+//		}
+//
+//		if($demo) {
+//			$html .= 'cirsim.options.demo = true;';
+//		}
+//
+//		if($json !== null) {
+//			$html .= "cirsim.options.load='" . $json . "';";
+//		}
+//
+//		if(count($this->tabs) > 0) {
+//			$tabs = '';
+//			foreach($this->tabs as $tab) {
+//				if(strlen($tabs) > 0) {
+//					$tabs .= ",";
+//				}
+//
+//				$tabs .= '"' . $tab . '"';
+//			}
+//
+//			$html .= "cirsim.options.tabs=[$tabs];";
+//		}
+//
+//		if(count($this->imports) > 0) {
+//			$json = json_encode($this->imports);
+//			$html .= "cirsim.options.imports=$json;";
+//		}
+//
+//		$html .= $this->js . 'cirsim.run();});</script>';
+//		return $html;
+//	}
 
 	/**
 	 * Indicate that only certain components should be allowed.
@@ -442,21 +469,13 @@ JS;
 		return $html;
 	}
 
-	/**
-	 * Set a user to view circuits for. This overrides the default
-	 * behavior of the current user. This is mainly for grading purposes.
-	 * @param User $user User to view
-	 */
-	public function set_other_user(User $user) {
-		$this->other_user = $user;
-	}
 
 	private $appTag = null;
 	private $name = null;
-	private $only = null;		///< Optional list of only certain components allowed
+	private $only = null;		// Optional list of only certain components allowed
 	private $tests = array();
-	private $other_user = null;
-	private $js = '';
 	private $tabs = array();	///< Any additional tabs to add
 	private $imports = array();	///< Any tab imports possible
+	private $save;              // True if save support is added
+	private $options;           // Other options to set
 }
