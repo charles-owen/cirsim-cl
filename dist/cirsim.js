@@ -13294,7 +13294,7 @@ var Main = function Main(cirsim, element, tests) {
   this.components = cirsim.components;
   this.test = new _Test__WEBPACK_IMPORTED_MODULE_8__["Test"](this); /// div.main
 
-  this.divMain = null; //
+  this.div = null; //
   // Tests can come from add_test or from options
   //
 
@@ -13417,8 +13417,8 @@ var Main = function Main(cirsim, element, tests) {
       // full user interface
       //
       // <div class="main"></div>
-      this.divMain = _DOM_Tools__WEBPACK_IMPORTED_MODULE_17__["Tools"].createClassedDiv('main');
-      this.element.appendChild(this.divMain);
+      this.div = _DOM_Tools__WEBPACK_IMPORTED_MODULE_17__["Tools"].createClassedDiv('main');
+      this.element.appendChild(this.div);
       this.help = new _Graphics_HelpDiv__WEBPACK_IMPORTED_MODULE_15__["HelpDiv"](this);
       tabs = new _Tabs__WEBPACK_IMPORTED_MODULE_5__["Tabs"](this);
       this.tabs = tabs; //
@@ -13432,7 +13432,7 @@ var Main = function Main(cirsim, element, tests) {
       //
 
       divWork = _DOM_Tools__WEBPACK_IMPORTED_MODULE_17__["Tools"].createClassedDiv('work');
-      this.divMain.appendChild(divWork); //
+      this.div.appendChild(divWork); //
       // And the palette
       //
 
@@ -13447,9 +13447,9 @@ var Main = function Main(cirsim, element, tests) {
       //
 
       divOverlay = _DOM_Tools__WEBPACK_IMPORTED_MODULE_17__["Tools"].createClassedDiv('cirsim-overlay');
-      this.divMain.appendChild(divOverlay);
+      this.div.appendChild(divOverlay);
       this.toast = new _Graphics_Toast__WEBPACK_IMPORTED_MODULE_9__["Toast"](this);
-      this.toast.create(this.divMain);
+      this.toast.create(this.div);
     }
 
     if (options.display === 'inline') {
@@ -13748,7 +13748,7 @@ var Menu = function Menu(main) {
     //
     _this.nav = document.createElement('nav');
     _DOM_Tools__WEBPACK_IMPORTED_MODULE_1__["Tools"].addClass(_this.nav, 'menubar');
-    main.divMain.appendChild(_this.nav);
+    main.div.appendChild(_this.nav);
     var ul = document.createElement('ul');
 
     _this.nav.appendChild(ul);

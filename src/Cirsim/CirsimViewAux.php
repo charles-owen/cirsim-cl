@@ -208,7 +208,7 @@ class CirsimViewAux extends ViewAux {
 
 			// Loading the single-save file
 			$fileSystem = new FileSystem($site->db);
-			$file = $fileSystem->readText($user->id, $this->appTag, $this->name);
+			$file = $fileSystem->readText($user->id, $user->member->id, $this->appTag, $this->name);
 			if($file !== null) {
 				$data['load'] = $file['data'];
 			}

@@ -35,14 +35,7 @@ class CirsimPlugin extends \CL\Site\Plugin {
 	 * @param $object Object to amend.
 	 */
 	public function amend($object) {
-		if($object instanceof Router) {
-			$router = $object;
-
-			$router->addRoute(['api', 'cirsim', '*'], function(Site $site, Server $server, array $params, array $properties, $time) {
-				$resource = new CirsimApi();
-				return $resource->apiDispatch($site, $server, $params, $properties, $time);
-			});
-		} else if($object instanceof ConsoleView) {
+		if($object instanceof ConsoleView) {
 			$object->addJS('cirsim');
 		}
 	}
