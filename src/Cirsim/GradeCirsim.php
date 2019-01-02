@@ -25,8 +25,8 @@ class GradeCirsim extends GradePart {
 	 * \param $points The maximum possible points for this category
 	 * \param $name A category name for display
 	 */
-	public function __construct($points, $name) {
-		parent::__construct($points, 'grade-cirsim');
+	public function __construct($name) {
+		parent::__construct(0, 'grade-cirsim');
 		$this->__set("name", $name);
 
 		$this->cirsim = new CirsimViewAux();

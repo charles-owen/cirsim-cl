@@ -24,6 +24,14 @@ use CL\FileSystem\FileSystem;
  */
 class CirsimViewAux extends ViewAux {
 	/**
+	 * CirsimViewAux constructor.
+	 * Sets the default values.
+	 */
+	public function __construct() {
+		$this->reset();
+	}
+
+	/**
 	 * Called when this auxiliary view is installed in a view
 	 * @param View $view View we are installing into
 	 */
@@ -164,10 +172,19 @@ class CirsimViewAux extends ViewAux {
 	}
 
 	/**
+	 *
+	 * @param bool $full
+	 * @return string
+	 */
+
+	/**
 	 * Present the cirsim div in a view.
+	 * @param Site $site The site object
+	 * @param User $user Current user
 	 * @param bool $full True for full screen (cirsim-full),
 	 * false for windowed (cirsim-window).
-	 * @return string
+	 * @param string|null $class Optional class to add to the div
+	 * @return string HTML
 	 */
 	public function present_div(Site $site, User $user, $full = false, $class=null) {
 		$root = $site->root;
@@ -424,50 +441,50 @@ class CirsimViewAux extends ViewAux {
 			'staff' => $staff];
 	}
 
-	public function present_tests() {
-		$html = \Toggle::begin("Expand for testing truth table", "p");
-
-		foreach($this->tests as $test) {
-			$html .= "<h3>" . $test["name"] . "</h3>";
-
-			$html .= '<table class="truth-table"><tr>';
-			foreach($test["input"] as $input) {
-				$html .= "<th>$input</th>";
-			}
-
-			$first = true;
-			foreach($test["output"] as $output) {
-				if($first) {
-					$html .= "<th class=\"border\">$output</th>";
-					$first = false;
-				} else {
-					$html .= "<th>$output</th>";
-				}
-
-			}
-			$html .= "</tr>";
-
-			foreach($test["test"] as $row) {
-				$html .= "<tr>";
-				$i = 0;
-				foreach($row as $cell) {
-					if($i == count($test["input"])) {
-						$html .= "<td class=\"border\">$cell</td>";
-					} else {
-						$html .= "<td>$cell</td>";
-					}
-
-					$i++;
-				}
-				$html .= "</tr>";
-			}
-
-			$html .= '</table>';
-		}
-
-		$html .= \Toggle::end();
-		return $html;
-	}
+//	public function present_tests() {
+//		$html = \Toggle::begin("Expand for testing truth table", "p");
+//
+//		foreach($this->tests as $test) {
+//			$html .= "<h3>" . $test["name"] . "</h3>";
+//
+//			$html .= '<table class="truth-table"><tr>';
+//			foreach($test["input"] as $input) {
+//				$html .= "<th>$input</th>";
+//			}
+//
+//			$first = true;
+//			foreach($test["output"] as $output) {
+//				if($first) {
+//					$html .= "<th class=\"border\">$output</th>";
+//					$first = false;
+//				} else {
+//					$html .= "<th>$output</th>";
+//				}
+//
+//			}
+//			$html .= "</tr>";
+//
+//			foreach($test["test"] as $row) {
+//				$html .= "<tr>";
+//				$i = 0;
+//				foreach($row as $cell) {
+//					if($i == count($test["input"])) {
+//						$html .= "<td class=\"border\">$cell</td>";
+//					} else {
+//						$html .= "<td>$cell</td>";
+//					}
+//
+//					$i++;
+//				}
+//				$html .= "</tr>";
+//			}
+//
+//			$html .= '</table>';
+//		}
+//
+//		$html .= \Toggle::end();
+//		return $html;
+//	}
 
 
 	private $appTag = null;
