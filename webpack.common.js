@@ -1,6 +1,5 @@
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const FileManagerPlugin = require('filemanager-webpack-plugin');
 
 module.exports = {
 	entry: {
@@ -23,14 +22,6 @@ module.exports = {
 				to: 'cirsim/help',
 				flatten: false
 			}
-		]),
-		new FileManagerPlugin({
-			onEnd: {
-				copy: [
-					{source: path.resolve(__dirname, '../../../cl/dist/cirsim.*'), destination: path.resolve(__dirname, 'dist') },
-					{source: path.resolve(__dirname, '../../../cl/dist/cirsim/'), destination: path.resolve(__dirname, 'dist/cirsim') }
-				]
-			}
-		})
+		])
 	]
 }
