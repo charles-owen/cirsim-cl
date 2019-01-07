@@ -19,7 +19,9 @@ use CL\FileSystem\FileSystem;
  * Adds Cirsim to an existing view.
  *
  * @cond
+ * @property string appTag
  * @property boolean save
+ * @property array tabs
  * @endcond
  */
 class CirsimViewAux extends ViewAux {
@@ -71,6 +73,9 @@ class CirsimViewAux extends ViewAux {
 			case 'tests':
 				return $this->tests;
 
+			case 'appTag':
+				return $this->appTag;
+
 			default:
 				return parent::__get($property);
 		}
@@ -82,6 +87,7 @@ class CirsimViewAux extends ViewAux {
 	 * <b>Properties</b>
 	 * Property | Type | Description
 	 * -------- | ---- | -----------
+	 * appTag | string | If set, value is used as appTag for the file system
 	 *
 	 * @param string $property Property name
 	 * @param mixed $value Value to set
@@ -102,6 +108,10 @@ class CirsimViewAux extends ViewAux {
 
 			case 'save':
 				$this->save = $value;
+				break;
+
+			case 'appTag':
+				$this->appTag = $value;
 				break;
 
 			default:
@@ -148,6 +158,7 @@ class CirsimViewAux extends ViewAux {
 	 * Present the cirsim window in a view.
 	 * @param bool $full True for full screen (cirsim-full),
 	 * false for windowed (cirsim-window).
+	 * @param string $class Additional classes to add to the tag
 	 * @return string
 	 */
 	public function present($full = false, $class=null) {
@@ -208,7 +219,11 @@ class CirsimViewAux extends ViewAux {
 			$data['components'] = $this->only;
 		}
 
-		$data['api'] = [];
+		$data['api'] = [
+			'extra'=>[
+				'type'=>'application/json'
+			]
+		];
 
 		if($this->name !== null) {
 			//
@@ -218,7 +233,6 @@ class CirsimViewAux extends ViewAux {
 			if($this->save) {
 				$data['api']['save'] = [
 					'url'=> $root . '/cl/api/filesystem/save',
-					'contentType'=>'application/json',
 					'name'=>$this->name
 				];
 			}
@@ -229,12 +243,29 @@ class CirsimViewAux extends ViewAux {
 			if($file !== null) {
 				$data['load'] = $file['data'];
 			}
+		} else {
+			if($this->save) {
+				$data['api']['save'] = [
+					'url'=> $root . '/cl/api/filesystem/save',
+				];
+
+				$data['api']['files'] = [
+					'url'=> $root . '/cl/api/filesystem',
+				];
+
+				$data['api']['open'] = [
+					'url'=> $root . '/cl/api/filesystem/load',
+				];
+			}
 		}
 
 		if($this->appTag !== null) {
-			$data['api']['extra'] = [
-				'appTag'=>$this->appTag
-			];
+			$data['api']['extra']['appTag'] = $this->appTag;
+		}
+
+		if(count($this->tabs) > 0) {
+			$data['tabs'] = $this->tabs;
+			echo 'adding tabs';
 		}
 
 		//
@@ -490,9 +521,9 @@ class CirsimViewAux extends ViewAux {
 	private $appTag = null;
 	private $name = null;
 	private $only = null;		// Optional list of only certain components allowed
-	private $tests = array();
-	private $tabs = array();	///< Any additional tabs to add
-	private $imports = array();	///< Any tab imports possible
+	private $tests = [];
+	private $tabs = [];	        // Any additional tabs to add
+	private $imports = [];	    // Any tab imports possible
 	private $save;              // True if save support is added
 	private $options;           // Other options to set
 }

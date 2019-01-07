@@ -22,7 +22,6 @@ class GradeCirsim extends GradePart {
 
 	/**
 	 * Constructor
-	 * \param $points The maximum possible points for this category
 	 * \param $name A category name for display
 	 */
 	public function __construct($name) {
