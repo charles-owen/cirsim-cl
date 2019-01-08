@@ -87,20 +87,18 @@ class GradeCirsim extends GradePart {
 
 		$data['status'] = 0;
 
-		$html = <<<HTML
-HTML;
-
 		$this->cirsim->save = false;
+		$assignment = $this->grading->assignment;
+
+		$html = '';
+
+		if($this->configurator !== null) {
+			$this->configurator->configure($assignment, $this->cirsim, $user, true);
+			$html .= $this->configurator->gradingInfo();
+
+		}
+
 		$html .= $this->cirsim->present_div($site, $user, false,'cl-fat');
-
-//		if($this->configurator !== null) {
-//			$this->configurator->configure($this->get_assignment(), $this->cirsim, $user);
-//		}
-//
-//		$this->cirsim->set_other_user($user);
-//		$html .= $this->cirsim->present_div_minimal() .
-//			$this->cirsim->present_script($user->get_course(), \User::get());
-
 
 		$data['html'] = $html;
 		return $data;
@@ -118,6 +116,6 @@ HTML;
 	}
 
 
-	private $cirsim;			///< CirsimViewAux object
-	private $configurator = null;	///< Installed Cirsim configure object
+	private $cirsim;			    // CirsimViewAux object
+	private $configurator = null;	// Installed Cirsim configurator object
 }
