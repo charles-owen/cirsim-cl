@@ -47,7 +47,6 @@ class CirsimViewAux extends ViewAux {
 	 * Reset the Cirsim object to no single, tests, or only options.
 	 */
 	public function reset() {
-		$this->only = null;
 		$this->tests = [];
 		$this->appTag = null;
 		$this->name = null;
@@ -56,6 +55,8 @@ class CirsimViewAux extends ViewAux {
 		$this->save = false;
 		$this->options = [];
 		$this->user = null;
+		$this->components = null;
+		$this->load = null;
 	}
 
 
@@ -113,6 +114,14 @@ class CirsimViewAux extends ViewAux {
 
 			case 'appTag':
 				$this->appTag = $value;
+				break;
+
+			case 'components':
+				$this->components = $value;
+				break;
+
+			case 'load':
+				$this->load = $value;
 				break;
 
 			default:
@@ -216,10 +225,6 @@ class CirsimViewAux extends ViewAux {
 			$data['export'] = 'none';
 		}
 
-		if($this->only !== null) {
-			$data['components'] = $this->only;
-		}
-
 		$data['api'] = [
 			'extra'=>[
 				'type'=>'application/json'
@@ -272,6 +277,9 @@ class CirsimViewAux extends ViewAux {
 			$data['tabs'] = $this->tabs;
 		}
 
+		$this->optional($data, 'components', $this->components);
+		$this->optional($data, 'load', $this->load);
+
 		//
 		// Tests
 		//
@@ -297,6 +305,12 @@ class CirsimViewAux extends ViewAux {
 
 
 		return $html;
+	}
+
+	private function optional(&$data, $name, $property) {
+		if($property !== null) {
+			$data[$name] = $property;
+		}
 	}
 
 	/**
@@ -335,9 +349,10 @@ class CirsimViewAux extends ViewAux {
 	/**
 	 * Indicate that only certain components should be allowed.
 	 * Expects a list of only allowed components...
+	 * @deprecated Use components property instead
 	 */
 	public function set_only() {
-		$this->only = func_get_args();
+		$this->components = func_get_args();
 	}
 
 	/**
@@ -430,11 +445,12 @@ class CirsimViewAux extends ViewAux {
 
 	private $appTag = null;
 	private $name = null;
-	private $only = null;		// Optional list of only certain components allowed
 	private $tests = [];
 	private $tabs = [];	        // Any additional tabs to add
 	private $imports = [];	    // Any tab imports possible
 	private $save;              // True if save support is added
 	private $options;           // Other options to set
 	private $user;              // User to view/save/etc.
+	private $components;        // Components to use
+	private $load;              // JSON to load
 }

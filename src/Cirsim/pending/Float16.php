@@ -7,7 +7,7 @@
  * the values.
  */
 
-namespace Cirsim;
+namespace CL\Cirsim;
 
 /**
  * Representation of IEEE 754 half-float values.

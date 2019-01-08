@@ -4,7 +4,7 @@
  * Word chooser for tasks based on a 16 bit subset alphabet.
  */
 
-namespace Cirsim\Tasks;
+namespace CL\Cirsim\Tasks;
 
 
 class WordChooser extends \Assignments\GradeExtra {

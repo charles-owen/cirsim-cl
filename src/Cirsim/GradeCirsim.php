@@ -17,12 +17,17 @@ use CL\Users\User;
  * Does not actually create a grading element. Manual or other grading categories
  * should be used for actual grade entry. This provides a way to bring up a student
  * assignment in Cirsim with custom tests.
+ *
+ * @cond
+ * @property CirsimViewAux cirsim
+ * @property CirsimConfigurator configurator
+ * @endcond
  */
 class GradeCirsim extends GradePart {
 
 	/**
 	 * Constructor
-	 * \param $name A category name for display
+	 * @param string $name A category name for display
 	 */
 	public function __construct($name) {
 		parent::__construct(0, 'grade-cirsim');
@@ -38,6 +43,8 @@ class GradeCirsim extends GradePart {
 	 * <b>Properties</b>
 	 * Property | Type | Description
 	 * -------- | ---- | -----------
+	 * cirsim | CirsimViewAux | A Cirsim auxiliary view for this grade part
+	 * configurator | CirsimConfigurator | A configurator that configures Cirsim for the assignment
 	 *
 	 * @param string $property Property name
 	 * @return mixed
@@ -46,6 +53,9 @@ class GradeCirsim extends GradePart {
 		switch($property) {
 			case 'cirsim':
 				return $this->cirsim;
+
+			case 'configurator':
+				return $this->configurator;
 
 			default:
 				return parent::__get($property);
@@ -58,6 +68,7 @@ class GradeCirsim extends GradePart {
 	 * <b>Properties</b>
 	 * Property | Type | Description
 	 * -------- | ---- | -----------
+	 * configurator | CirsimConfigurator | A configurator that configures Cirsim for the assignment
 	 *
 	 * @param string $property Property name
 	 * @param mixed $value Value to set

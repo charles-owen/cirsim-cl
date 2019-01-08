@@ -4,7 +4,7 @@
  * View class for a basic Cirsim page.
  */
 
-namespace Cirsim;
+namespace CL\Cirsim;
 
 /**
  * View class for a basic Cirsim page.
