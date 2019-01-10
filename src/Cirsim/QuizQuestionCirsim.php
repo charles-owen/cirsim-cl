@@ -66,6 +66,10 @@ class QuizQuestionCirsim extends \CL\Quiz\QuizQuestion {
 				$this->name = $value;
 				break;
 
+			case 'appTag':
+				$this->appTag = $value;
+				break;
+
 			default:
 				parent::__set($property, $value);
 				break;
