@@ -14,10 +14,18 @@
       "CL\\Cirsim\\": "src/Cirsim"
     }
   },
+  "require" : {
+    "cl/course": "^2.1"
+  },
   "repositories": [
     {
       "type": "vcs",
       "url": "https://github.com/charles-owen/cirsim-cl.git"
     }
-  ]
+  ],
+  "extra": {
+    "branch-alias": {
+      "dev-master": "2.1.x-dev"
+    }
+  }
 }
