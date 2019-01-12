@@ -20,7 +20,9 @@ use CL\FileSystem\FileSystem;
  *
  * @cond
  * @property string appTag
+ * @property mixed components
  * @property boolean save
+ * @property string tab
  * @property array tabs
  * @endcond
  */
@@ -90,6 +92,9 @@ class CirsimViewAux extends ViewAux {
 	 * Property | Type | Description
 	 * -------- | ---- | -----------
 	 * appTag | string | If set, value is used as appTag for the file system
+	 * tab | string | Adds a single tab to the circuit
+	 * tabs | array | Adds an array of tabs to the circuit
+	 * tests | array | Array of Cirsim tests
 	 *
 	 * @param string $property Property name
 	 * @param mixed $value Value to set
@@ -139,29 +144,31 @@ class CirsimViewAux extends ViewAux {
 	 * limited to submission only during the assignment.
 	 *
 	 * @param string $appTag The application tag. Can be an assignment tag
-	 * @param $name $name The name to use
+	 * @param string $name The name to use
+	 * @param boolean $save If true, the save option is included.
 	 */
-	public function single($appTag, $name) {
+	public function single($appTag, $name, $save = true) {
 		$this->appTag = $appTag;
 		$this->name = $name;
-		$this->save = true;
+		$this->save = $save;
 	}
 
 	/**
 	 * Add a menu option to import a tab from another file. This is
 	 * used to import tabs from one quiz to another.
-	 * @param $into_tab The tab we are importing into
-	 * @param $assignment The assignment for the source file
-	 * @param $tag The tag for the source file
-	 * @param $name The name of the source file
-	 * @param $from_tab The tab in the source file we are importing from.
+	 *
+	 * @param string $intoTab The tab we are importing into
+	 * @param string $appTag The assignment for the source file
+	 * @param string $name The name of the source file
+	 * @param string $fromTab The tab in the source file we are importing from.
 	 */
-	public function tab_import($into_tab, $assignment, $tag, $name, $from_tab) {
-		$this->imports[] = array("into"=>$into_tab,
-			"assignment"=>$assignment,
-			"tag"=>$tag,
+	public function tab_import($intoTab, $appTag, $name, $fromTab) {
+		$this->imports[] = ["into"=>$intoTab,
 			"name"=>$name,
-			"from"=>$from_tab);
+			"from"=>$fromTab,
+			'extra'=>[
+				"appTag"=>$appTag,
+			]];
 	}
 
 	/**
@@ -245,6 +252,16 @@ class CirsimViewAux extends ViewAux {
 					'url'=> $root . '/cl/api/filesystem/save',
 					'name'=>$this->name
 				];
+
+
+				// Adding this will load the file on open via Ajax
+				// instead of the normal behavior of loading it now
+				// and putting it into the 'load' option. Only keeping
+				// it around as a way of testing the OpenDialog functionality.
+//				$data['api']['open'] = [
+//					'url'=> $root . '/cl/api/filesystem/load',
+//					'name'=>$this->name
+//				];
 			}
 
 			// Loading the single-save file
@@ -256,15 +273,15 @@ class CirsimViewAux extends ViewAux {
 		} else {
 			if($this->save) {
 				$data['api']['save'] = [
-					'url'=> $root . '/cl/api/filesystem/save',
+					'url'=> $root . '/cl/api/filesystem/save'
 				];
 
 				$data['api']['files'] = [
-					'url'=> $root . '/cl/api/filesystem',
+					'url'=> $root . '/cl/api/filesystem'
 				];
 
 				$data['api']['open'] = [
-					'url'=> $root . '/cl/api/filesystem/load',
+					'url'=> $root . '/cl/api/filesystem/load'
 				];
 			}
 		}
@@ -279,6 +296,14 @@ class CirsimViewAux extends ViewAux {
 
 		$this->optional($data, 'components', $this->components);
 		$this->optional($data, 'load', $this->load);
+
+		if(count($this->imports) > 0) {
+			$data['imports'] = $this->imports;
+
+			$data['api']['import'] = [
+				'url'=> $root . '/cl/api/filesystem/load'
+			];
+		}
 
 		//
 		// Tests
