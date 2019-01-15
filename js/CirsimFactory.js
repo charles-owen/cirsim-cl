@@ -1,4 +1,4 @@
-import Cirsim from 'cirsim';
+import {Cirsim} from 'cirsim';
 
 export const CirsimFactory = function() {
 }

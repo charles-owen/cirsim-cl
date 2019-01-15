@@ -186,8 +186,12 @@ class CirsimViewAux extends ViewAux {
 				. $this->view->exitBody();
 		}
 
-		$user = $this->view->user;
 		$site = $this->view->site;
+		if($site->installed('users')) {
+			$user = $site->users->user;
+		} else {
+			$user = null;
+		}
 
 		$html .= $this->present_div($site, $user, $full, $class);
 
@@ -214,7 +218,7 @@ class CirsimViewAux extends ViewAux {
 	 * @param string|null $class Optional class to add to the div
 	 * @return string HTML
 	 */
-	public function present_div(Site $site, User $user, $full = false, $class=null) {
+	public function present_div(Site $site, User $user=null, $full = false, $class=null) {
 		$root = $site->root;
 
 		$html = '';
@@ -227,67 +231,86 @@ class CirsimViewAux extends ViewAux {
 			$data[$option] = $value;
 		}
 
-		// Features only available to staff
-		if(!$user->staff) {
-			$data['export'] = 'none';
-		}
+		// User dependent features
+		if($user !== null) {
 
-		$data['api'] = [
-			'extra'=>[
-				'type'=>'application/json'
-			]
-		];
-
-		if($this->user !== null) {
-			$data['api']['extra']['memberId'] = $this->user->member->id;
-		}
-
-		if($this->name !== null) {
-			//
-			// Single-save mode
-			//
-
-			if($this->save) {
-				$data['api']['save'] = [
-					'url'=> $root . '/cl/api/filesystem/save',
-					'name'=>$this->name
-				];
-
-
-				// Adding this will load the file on open via Ajax
-				// instead of the normal behavior of loading it now
-				// and putting it into the 'load' option. Only keeping
-				// it around as a way of testing the OpenDialog functionality.
-//				$data['api']['open'] = [
-//					'url'=> $root . '/cl/api/filesystem/load',
-//					'name'=>$this->name
-//				];
+			// Features only available to staff by default
+			if(!$user->staff) {
+				$data['export'] = 'none';
 			}
 
-			// Loading the single-save file
-			$fileSystem = new FileSystem($site->db);
-			$file = $fileSystem->readText($user->id, $user->member->id, $this->appTag, $this->name);
-			if($file !== null) {
-				$data['load'] = $file['data'];
+		}
+
+		if($site->installed('filesystem')) {
+			// Filesystem dependent features
+			$data['api'] = [
+				'extra'=>[
+					'type'=>'application/json'
+				]
+			];
+
+			if($this->user !== null) {
+				$data['api']['extra']['memberId'] = $this->user->member->id;
 			}
-		} else {
-			if($this->save) {
-				$data['api']['save'] = [
-					'url'=> $root . '/cl/api/filesystem/save'
-				];
 
-				$data['api']['files'] = [
-					'url'=> $root . '/cl/api/filesystem'
-				];
+			if($this->name !== null) {
+				//
+				// Single-save mode
+				//
 
-				$data['api']['open'] = [
+				if($this->save) {
+					$data['api']['save'] = [
+						'url'=> $root . '/cl/api/filesystem/save',
+						'name'=>$this->name
+					];
+
+
+					// Adding this will load the file on open via Ajax
+					// instead of the normal behavior of loading it now
+					// and putting it into the 'load' option. Only keeping
+					// it around as a way of testing the OpenDialog functionality.
+	//				$data['api']['open'] = [
+	//					'url'=> $root . '/cl/api/filesystem/load',
+	//					'name'=>$this->name
+	//				];
+				}
+
+				if($user !== null) {
+					// Loading the single-save file
+					$fileSystem = new FileSystem($site->db);
+					$file = $fileSystem->readText($user->id, $user->member->id, $this->appTag, $this->name);
+					if($file !== null) {
+						$data['load'] = $file['data'];
+					}
+				}
+
+			} else {
+				if($this->save) {
+					$data['api']['save'] = [
+						'url'=> $root . '/cl/api/filesystem/save'
+					];
+
+					$data['api']['files'] = [
+						'url'=> $root . '/cl/api/filesystem'
+					];
+
+					$data['api']['open'] = [
+						'url'=> $root . '/cl/api/filesystem/load'
+					];
+				}
+			}
+
+			if($this->appTag !== null) {
+				$data['api']['extra']['appTag'] = $this->appTag;
+			}
+
+			if(count($this->imports) > 0) {
+				$data['imports'] = $this->imports;
+
+				$data['api']['import'] = [
 					'url'=> $root . '/cl/api/filesystem/load'
 				];
 			}
-		}
-
-		if($this->appTag !== null) {
-			$data['api']['extra']['appTag'] = $this->appTag;
 		}
 
 		if(count($this->tabs) > 0) {
@@ -297,13 +320,6 @@ class CirsimViewAux extends ViewAux {
 		$this->optional($data, 'components', $this->components);
 		$this->optional($data, 'load', $this->load);
 
-		if(count($this->imports) > 0) {
-			$data['imports'] = $this->imports;
-
-			$data['api']['import'] = [
-				'url'=> $root . '/cl/api/filesystem/load'
-			];
-		}
 
 		//
 		// Tests

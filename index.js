@@ -1,5 +1,5 @@
 import './_cirsim.scss';
-import Cirsim from 'cirsim';
+import {Cirsim} from 'cirsim';
 
 export {Cirsim};
 export default Cirsim;
