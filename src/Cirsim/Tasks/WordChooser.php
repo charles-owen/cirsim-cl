@@ -1,23 +1,59 @@
 <?php
 /**
  * @file
- * Word chooser for tasks based on a 16 bit subset alphabet.
+ * Word chooser for tasks based on a 16 bit subset alphabet
+ * supported by the Cirsim character component.
  */
 
 namespace CL\Cirsim\Tasks;
 
+use CL\Grades\GradePart;
+use CL\Site\Site;
+use CL\Users\User;
+use CL\Users\Selector;
 
-class WordChooser extends \Assignments\GradeExtra {
+class WordChooser extends GradePart {
 
-	public function present(\User $user) {
-		$this->user = $user;
-		$name = $user->get_displayname();
-		$word = $this->get_word($user);
-		return "<p>The secret word for $name is $word</p>";
+	/**
+	 * Constructor
+	 * @param string $name A category name for display
+	 */
+	public function __construct($name) {
+		parent::__construct(0, 'grade-cirsim-word-chooser');
+		$this->__set("name", $name);
 	}
 
-	public function get_word(\User $user) {
-		$selector = new \User\Selector($user, "WordChooser");
+	/**
+	 * Create the grading form for staff use
+	 * @param Site $site The Site object
+	 * @param User $user User we are grading
+	 * @param array $grades Result from call to getUserGrades
+	 * @return array describing a grader
+	 */
+	public function createGrader(Site $site, User $user, array $grades) {
+		$data = parent::createGrader($site, $user, $grades);
+
+		$data['status'] = 0;
+
+		$name = $user->displayName;
+		$word = $this->get_word($user);
+
+		$data['html'] = "<p>The secret word for $name is $word</p>";
+		return $data;
+	}
+
+	/**
+	 * Compute the grade for this assignment
+	 * @param int $memberId Member we are grading
+	 * @param array $grades Result from call to getUserGrades
+	 * @return array with keys 'points' and optionally 'override'
+	 */
+	public function computeGrade($memberId, array $grades) {
+		return ['points'=>0];
+	}
+
+	public function get_word(User $user) {
+		$selector = new Selector($user, "WordChooser");
 
 		$words = array_merge($this->words7(), $this->words8());
 		$ndx = $selector->get_rand() % count($words);
@@ -40,8 +76,6 @@ HTML;
 		$html .= "</table>";
 		return $html;
 	}
-
-	private $user;
 
 	private $letters = array('A', 'C', 'D', 'E', 'F', 'H', 'I',
 		'L', 'M', 'N', 'O', 'R', 'S', 'T',
