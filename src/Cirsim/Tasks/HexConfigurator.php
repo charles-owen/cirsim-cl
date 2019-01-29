@@ -107,9 +107,12 @@ class HexConfigurator extends \CL\Cirsim\CirsimConfigurator {
 			$testEN[] = [$add[0], $add[1], $add[2], $add[3], $add[11]];
 		}
 
+//		echo '<pre>';
+//		print_r($testA);
+//		echo '</pre>';
 		$cirsim->reset();
 		$cirsim->single($assignment->tag, "hex-decoder");
-		$cirsim->set_only('and', 'or', 'not', 'and3', 'and4', 'or4', 'and4', '7seg');
+		$cirsim->components = ['and', 'or', 'not', 'and3', 'and4', 'or4', 'and4', '7seg'];
 		$cirsim->tabs = ["a", "b", "c", "d", "e", "f", "g", "en"];
 		$cirsim->option('tabsMenu', false);
 		if($this->grading) {

@@ -235,7 +235,7 @@ class CirsimViewAux extends ViewAux {
 		if($user !== null) {
 
 			// Features only available to staff by default
-			if(!$user->staff) {
+			if(!$user->staff) { // && !$site->sandbox) {
 				$data['export'] = 'none';
 			}
 
@@ -369,6 +369,11 @@ class CirsimViewAux extends ViewAux {
 			'display'=>'inline',
 			'load'=>$json
 		];
+
+		foreach($this->options as $option => $value) {
+			$data[$option] = $value;
+		}
+
 		$payload = htmlspecialchars(json_encode($data), ENT_NOQUOTES);
 		$html = '<div class="cl-cirsim' . $class . '">' . $payload . '</div>';
 
