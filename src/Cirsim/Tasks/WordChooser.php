@@ -12,6 +12,11 @@ use CL\Site\Site;
 use CL\Users\User;
 use CL\Users\Selector;
 
+/**
+ * Class WordChooser
+ * Word chooser for tasks based on a 16 bit subset alphabet
+ * supported by the Cirsim character component.
+ */
 class WordChooser extends GradePart {
 
 	/**
@@ -52,6 +57,11 @@ class WordChooser extends GradePart {
 		return ['points'=>0];
 	}
 
+	/**
+	 * Get the selected word for a given user
+	 * @param User $user
+	 * @return string
+	 */
 	public function get_word(User $user) {
 		$selector = new Selector($user, "WordChooser");
 
@@ -61,6 +71,10 @@ class WordChooser extends GradePart {
 		return strtoupper($word);
 	}
 
+	/**
+	 * Present the letters table for the Cirsim letters component.
+	 * @return string HTML
+	 */
 	public function present_table() {
 		$html = <<<HTML
 <table>
@@ -432,7 +446,7 @@ HTML;
 		);
 	}
 
-	public function words8() {
+	private function words8() {
 		return array(
 			"achiotes",
 			"aconites",
