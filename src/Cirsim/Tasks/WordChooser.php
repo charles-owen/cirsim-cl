@@ -18,6 +18,14 @@ use CL\Users\Selector;
  * supported by the Cirsim character component.
  */
 class WordChooser extends GradePart {
+    /// Result word will not have any duplicate letters
+    const UniqueLetters = 'u';
+
+    /// Result word will be required to have duplicate letters
+    const DuplicateLetters = 'd';
+
+    /// No filtering at all
+    const NoFilter = 'n';
 
 	/**
 	 * Constructor
@@ -28,7 +36,57 @@ class WordChooser extends GradePart {
 		$this->__set("name", $name);
 	}
 
-	/**
+    /**
+     * Property get magic method
+     *
+     * <b>Properties</b>
+     * Property | Type | Description
+     * -------- | ---- | -----------
+     *
+     * @param string $property Property name
+     * @return mixed
+     */
+    public function __get($property) {
+        switch($property) {
+
+
+            default:
+                return parent::__get($property);
+        }
+    }
+
+    /**
+     * Property set magic method
+     *
+     * <b>Properties</b>
+     * Property | Type | Description
+     * -------- | ---- | -----------
+     *
+     * @param string $property Property name
+     * @param mixed $value Value to set
+     */
+    public function __set($property, $value) {
+        switch($property) {
+            case 'salt':
+                $this->salt = $value;
+                break;
+
+            case 'words':
+                $this->words = $value;
+                break;
+
+            case 'filter':
+                $this->filter = $value;
+                break;
+
+            default:
+                parent::__set($property, $value);
+                break;
+        }
+    }
+
+
+    /**
 	 * Create the grading form for staff use
 	 * @param Site $site The Site object
 	 * @param User $user User we are grading
@@ -63,9 +121,51 @@ class WordChooser extends GradePart {
 	 * @return string
 	 */
 	public function get_word(User $user) {
-		$selector = new Selector($user, "WordChooser");
+		$selector = new Selector($user, $this->salt);
 
-		$words = array_merge($this->words7(), $this->words8());
+		if($this->words !== null) {
+		    $words = $this->words;
+        } else {
+            $words = array_merge($this->words7(), $this->words8());
+        }
+
+		switch($this->filter) {
+            case self::UniqueLetters:
+                $words = array_filter($words, function($word) {
+                    $len = strlen($word);
+                    for($i=0; $i<$len;  $i++) {
+                        for($j=$i+1; $j<$len; $j++) {
+                            if($word[$i] === $word[$j]) {
+                                return false;
+                            }
+                        }
+
+                    }
+
+                    return true;
+                });
+
+                $words = array_values($words);
+                break;
+
+            case self::DuplicateLetters:
+                $words = array_filter($words, function($word) {
+                    $len = strlen($word);
+                    for($i=0; $i<$len;  $i++) {
+                        for($j=$i+1; $j<$len; $j++) {
+                            if($word[$i] === $word[$j]) {
+                                return true;
+                            }
+                        }
+
+                    }
+
+                    return false;
+                });
+                $words = array_values($words);
+                break;
+        }
+
 		$ndx = $selector->get_rand() % count($words);
 		$word = $words[$ndx];
 		return strtoupper($word);
@@ -90,6 +190,12 @@ HTML;
 		$html .= "</table>";
 		return $html;
 	}
+
+	private $salt = "WordChooser";
+
+	private $words = null;
+
+	private $filter = self::UniqueLetters;
 
 	private $letters = array('A', 'C', 'D', 'E', 'F', 'H', 'I',
 		'L', 'M', 'N', 'O', 'R', 'S', 'T',
