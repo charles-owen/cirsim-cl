@@ -19,9 +19,10 @@ use CL\FileSystem\FileSystem;
  * Adds Cirsim to an existing view.
  *
  * @cond
+ * @property string answer JSON for a question answer/solution
  * @property string appTag
- * @property mixed components
- * @property boolean save
+ * @property mixed components Array of components to use
+ * @property boolean save If true, the save menu option is included
  * @property string tab
  * @property array tabs
  * @endcond
@@ -59,6 +60,7 @@ class CirsimViewAux extends ViewAux {
 		$this->user = null;
 		$this->components = null;
 		$this->load = null;
+		$this->answer = null;
 	}
 
 
@@ -91,7 +93,10 @@ class CirsimViewAux extends ViewAux {
 	 * <b>Properties</b>
 	 * Property | Type | Description
 	 * -------- | ---- | -----------
+     * answer | string | JSON answer to the problem/available to staff
 	 * appTag | string | If set, value is used as appTag for the file system
+     * components | array | Array of components to include
+     * save | boolean | If true, the save menu option is included (default=false)
 	 * tab | string | Adds a single tab to the circuit
 	 * tabs | array | Adds an array of tabs to the circuit
 	 * tests | array | Array of Cirsim tests
@@ -101,7 +106,23 @@ class CirsimViewAux extends ViewAux {
 	 */
 	public function __set($property, $value) {
 		switch($property) {
-			case "tab":
+            case 'answer':
+                $this->answer = $value;
+                break;
+
+            case 'appTag':
+                $this->appTag = $value;
+                break;
+
+            case 'components':
+                $this->components = $value;
+                break;
+
+            case 'save':
+                $this->save = $value;
+                break;
+
+            case "tab":
 				$this->tabs[] = $value;
 				break;
 
@@ -113,21 +134,11 @@ class CirsimViewAux extends ViewAux {
 				$this->tests = $value;
 				break;
 
-			case 'save':
-				$this->save = $value;
-				break;
-
-			case 'appTag':
-				$this->appTag = $value;
-				break;
-
-			case 'components':
-				$this->components = $value;
-				break;
 
 			case 'load':
 				$this->load = $value;
 				break;
+
 
 			default:
 				parent::__set($property, $value);
@@ -234,9 +245,14 @@ class CirsimViewAux extends ViewAux {
 		// User dependent features
 		if($user !== null) {
 
-			// Features only available to staff by default
-			if(!$user->staff) { // && !$site->sandbox) {
-				$data['export'] = 'none';
+			if($user->staff) {
+                // Features only available to staff by default
+                if($this->answer !== null) {
+				    $data['loadMenu'] = [['name'=>'Load Solution', 'json'=>$this->answer]];
+                }
+			} else {
+			    // Not available to users other than staff
+                $data['export'] = 'none';
 			}
 
 		}
@@ -499,4 +515,5 @@ class CirsimViewAux extends ViewAux {
 	private $user;              // User to view/save/etc.
 	private $components;        // Components to use
 	private $load;              // JSON to load
+    private $answer = null;     // Any answer JSON
 }
