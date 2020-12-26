@@ -63,6 +63,11 @@ class HexConfigurator extends \CL\Cirsim\CirsimConfigurator {
 			$hex .= $chars[$digit];
 		}
 
+		if($user->staff) {
+		    $hex = 'AC4D2B';
+		    $digits = [10, 12, 4, 13, 2, 11];
+        }
+
 		$this->hex = $hex;
 		$this->digits = $digits;
 
