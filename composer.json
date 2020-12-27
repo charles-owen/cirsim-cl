@@ -15,7 +15,8 @@
     }
   },
   "require" : {
-    "cl/site": "^2.1"
+    "cl/site": "^2.1",
+    "cl/cirsim-php": "^1.0"
   },
   "repositories": [
     {

@@ -33,6 +33,7 @@ class CirsimViewAux extends ViewAux {
 	 * Sets the default values.
 	 */
 	public function __construct() {
+	    $this->cirsim = new \CL\CirsimPHP\Cirsim();
 		$this->reset();
 	}
 
@@ -50,17 +51,8 @@ class CirsimViewAux extends ViewAux {
 	 * Reset the Cirsim object to no single, tests, or only options.
 	 */
 	public function reset() {
-		$this->tests = [];
-		$this->appTag = null;
-		$this->name = null;
-		$this->tabs = [];
-		$this->imports = [];
-		$this->save = false;
-		$this->options = [];
-		$this->user = null;
-		$this->components = null;
-		$this->load = null;
-		$this->answer = null;
+	    $this->cirsim->reset();
+        $this->answer = null;
 	}
 
 
@@ -77,10 +69,13 @@ class CirsimViewAux extends ViewAux {
 	public function __get($property) {
 		switch($property) {
 			case 'tests':
-				return $this->tests;
+				return $this->cirsim->tests;
 
 			case 'appTag':
-				return $this->appTag;
+				return $this->cirsim->appTag;
+
+            case 'name':
+                return $this->cirsim->name;
 
 			default:
 				return parent::__get($property);
@@ -110,37 +105,15 @@ class CirsimViewAux extends ViewAux {
                 $this->answer = $value;
                 break;
 
-            case 'appTag':
-                $this->appTag = $value;
+            case 'user':
+                $this->user = $value;
                 break;
-
-            case 'components':
-                $this->components = $value;
-                break;
-
-            case 'save':
-                $this->save = $value;
-                break;
-
-            case "tab":
-				$this->tabs[] = $value;
-				break;
-
-			case "tabs":
-				$this->tabs = $value;
-				break;
-
-			case 'tests':
-				$this->tests = $value;
-				break;
-
-
-			case 'load':
-				$this->load = $value;
-				break;
-
 
 			default:
+                if($this->cirsim->set($property, $value)) {
+                    break;
+                }
+
 				parent::__set($property, $value);
 				break;
 		}
@@ -159,9 +132,7 @@ class CirsimViewAux extends ViewAux {
 	 * @param boolean $save If true, the save option is included.
 	 */
 	public function single($appTag, $name, $save = true) {
-		$this->appTag = $appTag;
-		$this->name = $name;
-		$this->save = $save;
+	    $this->cirsim->single($appTag, $name, $save);
 	}
 
 	/**
@@ -174,12 +145,7 @@ class CirsimViewAux extends ViewAux {
 	 * @param string $fromTab The tab in the source file we are importing from.
 	 */
 	public function tab_import($intoTab, $appTag, $name, $fromTab) {
-		$this->imports[] = ["into"=>$intoTab,
-			"name"=>$name,
-			"from"=>$fromTab,
-			'extra'=>[
-				"appTag"=>$appTag,
-			]];
+	    $this->cirsim->tab_import($intoTab, $appTag, $name, $fromTab);
 	}
 
 	/**
@@ -234,61 +200,34 @@ class CirsimViewAux extends ViewAux {
 
 		$html = '';
 
-		$data = [
-			'display'=>$full ? 'full' : 'window'
-		];
-
-		foreach($this->options as $option => $value) {
-			$data[$option] = $value;
-		}
-
 		// User dependent features
 		if($user !== null) {
+            $this->cirsim->export = $user->staff;
 
 			if($user->staff) {
                 // Features only available to staff by default
                 if($this->answer !== null) {
-				    $data['loadMenu'] = [['name'=>'Load Solution', 'json'=>$this->answer]];
+                    $this->cirsim->answer = $this->answer;
                 }
-			} else {
-			    // Not available to users other than staff
-                $data['export'] = 'none';
 			}
 
 		}
 
 		if($site->installed('filesystem')) {
 			// Filesystem dependent features
-			$data['api'] = [
-				'extra'=>[
-					'type'=>'application/json'
-				]
-			];
+            $this->cirsim->api->load = $root . '/cl/api/filesystem/load';
 
 			if($this->user !== null) {
-				$data['api']['extra']['memberId'] = $this->user->member->id;
+			    $this->cirsim->api->extra('memberId', $this->user->member->id);
 			}
 
-			if($this->name !== null) {
+			if($this->cirsim->name !== null) {
 				//
 				// Single-save mode
 				//
 
-				if($this->save) {
-					$data['api']['save'] = [
-						'url'=> $root . '/cl/api/filesystem/save',
-						'name'=>$this->name
-					];
-
-
-					// Adding this will load the file on open via Ajax
-					// instead of the normal behavior of loading it now
-					// and putting it into the 'load' option. Only keeping
-					// it around as a way of testing the OpenDialog functionality.
-	//				$data['api']['open'] = [
-	//					'url'=> $root . '/cl/api/filesystem/load',
-	//					'name'=>$this->name
-	//				];
+                if($this->cirsim->save) {
+                    $this->cirsim->api->save = $root . '/cl/api/filesystem/save';
 				}
 
 				if($user !== null) {
@@ -296,78 +235,21 @@ class CirsimViewAux extends ViewAux {
 					$fileSystem = new FileSystem($site->db);
 					$file = $fileSystem->readText($user->id, $user->member->id, $this->appTag, $this->name);
 					if($file !== null) {
-						$data['load'] = $file['data'];
+					    $this->cirsim->load = $file['data'];
 					}
 				}
 
 			} else {
 				if($this->save) {
-					$data['api']['save'] = [
-						'url'=> $root . '/cl/api/filesystem/save'
-					];
-
-					$data['api']['files'] = [
-						'url'=> $root . '/cl/api/filesystem'
-					];
-
-					$data['api']['open'] = [
-						'url'=> $root . '/cl/api/filesystem/load'
-					];
+                    $this->cirsim->api->files = $root . '/cl/api/filesystem';
+                    $this->cirsim->api->save = $root . '/cl/api/filesystem/save';
 				}
 			}
-
-			if($this->appTag !== null) {
-				$data['api']['extra']['appTag'] = $this->appTag;
-			}
-
-			if(count($this->imports) > 0) {
-				$data['imports'] = $this->imports;
-
-				$data['api']['import'] = [
-					'url'=> $root . '/cl/api/filesystem/load'
-				];
-			}
 		}
 
-		if(count($this->tabs) > 0) {
-			$data['tabs'] = $this->tabs;
-		}
-
-		$this->optional($data, 'components', $this->components);
-		$this->optional($data, 'load', $this->load);
-
-
-		//
-		// Tests
-		//
-		$tests = [];
-		foreach($this->tests as $test) {
-			if($test['staff'] && !$user->staff) {
-				continue;
-			}
-
-			$tests[] = base64_encode(json_encode($test));
-		}
-
-		if(count($tests) > 0) {
-			$data['tests'] = $tests;
-		}
-
-		if(strlen($class) > 0) {
-			$class = ' ' . $class;
-		}
-
-		$payload = htmlspecialchars(json_encode($data), ENT_NOQUOTES);
-		$html .= '<div class="cl-cirsim' . $class . '">' . $payload . '</div>';
-
+        $html .= $this->cirsim->present($full, $class);
 
 		return $html;
-	}
-
-	private function optional(&$data, $name, $property) {
-		if($property !== null) {
-			$data[$name] = $property;
-		}
 	}
 
 	/**
@@ -380,20 +262,7 @@ class CirsimViewAux extends ViewAux {
 	 * @return string HTML
 	 */
 	public function present_demo($json, $class=null) {
-		$class = $class !== null ? ' ' . $class : '';
-		$data = [
-			'display'=>'inline',
-			'load'=>$json
-		];
-
-		foreach($this->options as $option => $value) {
-			$data[$option] = $value;
-		}
-
-		$payload = htmlspecialchars(json_encode($data), ENT_NOQUOTES);
-		$html = '<div class="cl-cirsim' . $class . '">' . $payload . '</div>';
-
-		return $html;
+	    return $this->cirsim->present_demo($json, $class);
 	}
 
 
@@ -403,7 +272,7 @@ class CirsimViewAux extends ViewAux {
 	 * @param mixed $value Value to set
 	 */
 	public function option($option, $value) {
-		$this->options[$option] = $value;
+	    $this->cirsim->option($option, $value);
 	}
 
 
@@ -414,7 +283,7 @@ class CirsimViewAux extends ViewAux {
 	 * @deprecated Use components property instead
 	 */
 	public function set_only() {
-		$this->components = func_get_args();
+	    $this->cirsim->components = func_get_args();
 	}
 
 	/**
@@ -427,93 +296,10 @@ class CirsimViewAux extends ViewAux {
 	 * @param boolean $staff True if only staff members see this test
 	 */
 	public function add_test($name, array $input, $output, $test, $staff=false) {
-		if(is_callable($test)) {
-			$test_func = $test;
-			$test = array();
-
-			$size = count($input);
-			for($i=0; $i<pow(2, $size); $i++) {
-				$row = array();
-				for($c=0; $c<$size; $c++) {
-					$a = ($i >> ($size-$c-1)) & 1;
-					$row[] = $a;
-				}
-
-				$result = call_user_func_array($test_func, $row);
-				if(is_array($result)) {
-					foreach($result as $r) {
-						$row[] = $r ? 1 : 0;
-					}
-				} else {
-					$row[] = $result ? 1 : 0;
-				}
-
-				$test[] = $row;
-			}
-		}
-
-		$this->tests[] = ['name' => $name,
-			'input' => $input,
-			'output' => $output,
-			'test' => $test,
-			'staff' => $staff];
+	    $this->cirsim->add_test($name, $input, $output, $test, $staff);
 	}
 
-//	public function present_tests() {
-//		$html = \Toggle::begin("Expand for testing truth table", "p");
-//
-//		foreach($this->tests as $test) {
-//			$html .= "<h3>" . $test["name"] . "</h3>";
-//
-//			$html .= '<table class="truth-table"><tr>';
-//			foreach($test["input"] as $input) {
-//				$html .= "<th>$input</th>";
-//			}
-//
-//			$first = true;
-//			foreach($test["output"] as $output) {
-//				if($first) {
-//					$html .= "<th class=\"border\">$output</th>";
-//					$first = false;
-//				} else {
-//					$html .= "<th>$output</th>";
-//				}
-//
-//			}
-//			$html .= "</tr>";
-//
-//			foreach($test["test"] as $row) {
-//				$html .= "<tr>";
-//				$i = 0;
-//				foreach($row as $cell) {
-//					if($i == count($test["input"])) {
-//						$html .= "<td class=\"border\">$cell</td>";
-//					} else {
-//						$html .= "<td>$cell</td>";
-//					}
-//
-//					$i++;
-//				}
-//				$html .= "</tr>";
-//			}
-//
-//			$html .= '</table>';
-//		}
-//
-//		$html .= \Toggle::end();
-//		return $html;
-//	}
-
-
-	private $appTag = null;
-	private $name = null;
-	private $tests = [];
-	private $tabs = [];	        // Any additional tabs to add
-	private $imports = [];	    // Any tab imports possible
-	private $save;              // True if save support is added
-	private $options;           // Other options to set
-	private $user;              // User to view/save/etc.
-	private $components;        // Components to use
-	private $load;              // JSON to load
+    private $cirsim;            // Underlying CirsimPHP\Cirsim object
     private $answer = null;     // Any answer JSON
+    private $user = null;       // Optional user to get data for
 }
