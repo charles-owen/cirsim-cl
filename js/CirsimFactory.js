@@ -6,7 +6,7 @@ export const CirsimFactory = function() {
 CirsimFactory.create = function(site) {
 
 	function install() {
-		const elements = document.querySelectorAll('div.cl-cirsim');
+		const elements = document.querySelectorAll('div.cirsim-install');
 		for(let i=0; i<elements.length; i++) {
 			let element = elements[i];
 			const json = JSON.parse(element.textContent);
