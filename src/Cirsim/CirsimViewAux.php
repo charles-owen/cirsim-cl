@@ -132,7 +132,7 @@ class CirsimViewAux extends ViewAux {
 	 * @param boolean $save If true, the save option is included.
 	 */
 	public function single($appTag, $name, $save = true) {
-	    $this->cirsim->single($appTag, $name, $save);
+	    $this->cirsim->single($appTag, $name, $save, false);
 	}
 
 	/**
@@ -215,6 +215,7 @@ class CirsimViewAux extends ViewAux {
 
 		if($site->installed('filesystem')) {
 			// Filesystem dependent features
+            $this->cirsim->api->load = $root . '/cl/api/filesystem/load';
 
 			if($this->user !== null) {
 			    $this->cirsim->api->extra('memberId', $this->user->member->id);
@@ -239,7 +240,6 @@ class CirsimViewAux extends ViewAux {
 				}
 
 			} else {
-                $this->cirsim->api->load = $root . '/cl/api/filesystem/load';
 
 				if($this->save) {
                     $this->cirsim->api->files = $root . '/cl/api/filesystem';

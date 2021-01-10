@@ -14,6 +14,7 @@ CirsimFactory.create = function(site) {
 			const cirsim = new Cirsim(element, json);
 			cirsim.startNow();
 			element.style.display = 'block';
+			element.classList.remove('cirsim-install');
 		}
 	}
 
