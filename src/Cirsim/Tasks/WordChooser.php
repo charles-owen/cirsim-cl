@@ -168,6 +168,10 @@ class WordChooser extends GradePart {
 
 		$ndx = $selector->get_rand() % count($words);
 		$word = $words[$ndx];
+		if($user->staff) {
+		    $word = 'DIALECTS';
+        }
+
 		return strtoupper($word);
 	}
 
