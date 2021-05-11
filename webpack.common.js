@@ -11,11 +11,11 @@ module.exports = {
 				patterns: [
 					{
 						from: 'node_modules/cirsim/src/img/*.png',
-						to: 'cirsim/img/[name].[ext]'
+						to: 'cirsim/img/[name][ext]'
 					},
 					{
 						from: 'node_modules/cirsim/src/img/*.ico',
-						to: 'cirsim/img/[name].[ext]'
+						to: 'cirsim/img/[name][ext]'
 					},
 					{
 						from: 'node_modules/cirsim/src/help',
