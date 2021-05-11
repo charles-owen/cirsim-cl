@@ -241,7 +241,7 @@ class CirsimViewAux extends ViewAux {
 
 			} else {
 
-				if($this->save) {
+				if($this->cirsim->save) {
                     $this->cirsim->api->files = $root . '/cl/api/filesystem';
                     $this->cirsim->api->save = $root . '/cl/api/filesystem/save';
 				}
