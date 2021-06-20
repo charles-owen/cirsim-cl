@@ -11,9 +11,12 @@
   ],
   "author": "Charles B. Owen",
   "license": "MIT",
-  "devDependencies": {},
   "dependencies": {
-    "cirsim": "~2.1.3",
+    "cirsim": "^2.1.17",
     "course-cl": ">=0.0.1"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^9.0.0",
+    "webpack": "^5.39.1"
   }
 }

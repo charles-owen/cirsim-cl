@@ -10,16 +10,28 @@ module.exports = {
 			{
 				patterns: [
 					{
-						from: 'node_modules/cirsim/src/img/*.png',
+						from: path.resolve(
+							path.dirname(require.resolve(`cirsim/package.json`)),
+							'src', 'img', '*.png').replace(/\\/g, '/'),
 						to: 'cirsim/img/[name][ext]'
 					},
 					{
-						from: 'node_modules/cirsim/src/img/*.ico',
+						from: path.resolve(
+							path.dirname(require.resolve(`cirsim/package.json`)),
+							'src', 'img', '*.ico').replace(/\\/g, '/'),
 						to: 'cirsim/img/[name][ext]'
 					},
 					{
-						from: 'node_modules/cirsim/src/help',
-						to: 'cirsim/help'
+						from: path.resolve(
+							path.dirname(require.resolve(`cirsim/package.json`)),
+							'src', 'help', '*').replace(/\\/g, '/'),
+						to: 'cirsim/help/[name][ext]'
+					},
+					{
+						from: path.resolve(
+							path.dirname(require.resolve(`cirsim/package.json`)),
+							'src', 'help', 'img', '*').replace(/\\/g, '/'),
+						to: 'cirsim/help/img/[name][ext]'
 					}
 				]
 			})
