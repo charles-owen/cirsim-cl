@@ -16,7 +16,7 @@
     "course-cl": ">=0.0.1"
   },
   "devDependencies": {
-    "copy-webpack-plugin": "^9.0.0",
-    "webpack": "^5.39.1"
+    "copy-webpack-plugin": "^11.0.0",
+    "webpack": "^5.74.0"
   }
 }
