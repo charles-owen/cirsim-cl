@@ -3,7 +3,10 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
 	entry: {
-		Cirsim: path.resolve(__dirname, 'index.js')
+    Cirsim: {
+      import: path.resolve(__dirname, 'index.js'),
+      dependOn: ['Course', 'Users', 'Site']
+    }
 	},
 	plugins: [
 		new CopyWebpackPlugin(
