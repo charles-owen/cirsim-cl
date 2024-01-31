@@ -5,5 +5,4 @@ export {Cirsim};
 export default Cirsim;
 
 import {CirsimFactory} from './js/CirsimFactory';
-
 CirsimFactory.create(Site.Site);
